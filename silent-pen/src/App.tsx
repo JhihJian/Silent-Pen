@@ -1,50 +1,55 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import MainPage from "./pages/MainPage";
+import WritePage from "./pages/WritePage";
+import React, { useEffect, useState } from "react";
+import { getPassword, setPassword } from "./utils/password";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [pwd, setPwd] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+  useEffect(() => {
+    if (!getPassword()) {
+      setShowPwd(true);
+    }
+  }, []);
+
+  function handleSetPwd() {
+    setPassword(pwd);
+    setShowPwd(false);
   }
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/write" element={<WritePage />} />
+        </Routes>
+      </Router>
+      {showPwd && (
+        <div style={{ position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 4px 32px #0002', padding: 36, minWidth: 320, textAlign: 'center', color: '#1976d2', fontWeight: 600, fontSize: 18 }}>
+            <div style={{ marginBottom: 16 }}>请设置你的日记本加密密码（明文显示）</div>
+            <input
+              type="text"
+              value={pwd}
+              onChange={e => setPwd(e.target.value)}
+              style={{ width: '80%', fontSize: 16, padding: 8, borderRadius: 6, border: '1px solid #e3e3e3', marginBottom: 16 }}
+              autoFocus
+            />
+            <div style={{ marginTop: 8 }}>
+              <button
+                onClick={handleSetPwd}
+                disabled={!pwd}
+                style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, fontSize: 16, padding: '6px 32px', fontWeight: 600, cursor: !pwd ? 'not-allowed' : 'pointer', opacity: !pwd ? 0.6 : 1, marginRight: 12 }}
+              >确认</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
