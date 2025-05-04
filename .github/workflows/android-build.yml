@@ -29,7 +29,9 @@ jobs:
         uses: swatinem/rust-cache@v2
 
       - name: Install frontend dependencies
-        run: npm install # 或者使用 yarn install / pnpm install 根据你的锁文件
+        run: |
+          cd silent-pen
+          npm install
 
       # 设置 Android SDK 环境
       # 这是一个关键步骤，确保 Android 构建工具可用
@@ -43,15 +45,12 @@ jobs:
       - name: Build Tauri Android app
         uses: tauri-apps/tauri-action@v0 # 使用 Tauri 官方提供的 GitHub Action
         with:
-          # command: 'build --target aarch64-linux-android' # Tauri Action 应该会自动检测目标
-          # tauri-dir: './' # 如果你的 tauri 项目不在仓库根目录，请修改此项
-          # dist-path: '../dist' # 前端构建产物的目录，请根据你的项目配置
-          # icon-path: '../icons/32x32.png' # 应用图标路径，请根据你的项目配置
+          working-directory: silent-pen
           args: '--target aarch64-linux-android' # 确保构建目标是 Android ARM 64 位
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
           name: tauri-android-build
-          path: src-tauri/target/aarch64-linux-android/release/bundle/apk/*.apk # 或者 .aab 文件路径，根据你的构建输出
+          path: silent-pen/src-tauri/target/aarch64-linux-android/release/bundle/apk/*.apk # 或者 .aab 文件路径，根据你的构建输出
           # 如果你构建的是 AAB，路径可能是 src-tauri/target/aarch64-linux-android/release/bundle/release/*.aab
