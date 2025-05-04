@@ -1,9 +1,9 @@
 name: Build Tauri Android
 
 on:
-  push:
-    branches:
-      - release # 或者你用于发布的任何分支
+  schedule:
+    - cron: '0 18 * * *' # 每天北京时间2点
+  workflow_dispatch:
 
 jobs:
   build-android:
