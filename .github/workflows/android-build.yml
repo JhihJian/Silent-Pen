@@ -1,50 +1,57 @@
-name: Build Android APK Daily
+name: Build Tauri Android
 
 on:
-  schedule:
-    - cron: '0 18 * * *' # 每天北京时间2点
-  workflow_dispatch:
+  push:
+    branches:
+      - release # 或者你用于发布的任何分支
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Android 构建通常在 Linux 环境下进行
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '20' # 根据你的项目选择合适的 Node.js 版本
+          cache: 'npm'
 
-      - name: Set up Rust
+      - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi
+          targets: aarch64-linux-android # 为 Android ARM 64 位目标安装 Rust 工具链
+          # 你可能还需要 x86_64-linux-android 如果需要模拟器支持
 
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli
+      - name: Cache Cargo dependencies
+        uses: swatinem/rust-cache@v2
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./silent-pen
+      - name: Install frontend dependencies
+        run: npm install # 或者使用 yarn install / pnpm install 根据你的锁文件
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Set up Android NDK
-        uses: android-actions/setup-ndk@v2
+      # 设置 Android SDK 环境
+      # 这是一个关键步骤，确保 Android 构建工具可用
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
         with:
-          ndk-version: '25.1.8937393'
+          api-level: 33 # 根据你的项目需求指定 API Level
+          build-tools: 33.0.0 # 根据你的项目需求指定 Build Tools 版本
+          # 你可能还需要指定其他组件，例如 system-images 用于模拟器测试（如果需要的话）
 
-      - name: Build Android APK (debug)
-        run: |
-          cd silent-pen
-          tauri android build
+      - name: Build Tauri Android app
+        uses: tauri-apps/tauri-action@v0 # 使用 Tauri 官方提供的 GitHub Action
+        with:
+          # command: 'build --target aarch64-linux-android' # Tauri Action 应该会自动检测目标
+          # tauri-dir: './' # 如果你的 tauri 项目不在仓库根目录，请修改此项
+          # dist-path: '../dist' # 前端构建产物的目录，请根据你的项目配置
+          # icon-path: '../icons/32x32.png' # 应用图标路径，请根据你的项目配置
+          args: '--target aarch64-linux-android' # 确保构建目标是 Android ARM 64 位
 
-      - name: Upload APK
+      - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
-          path: silent-pen/src-tauri/gen/android/app/build/outputs/apk/debug/*.apk 
+          name: tauri-android-build
+          path: src-tauri/target/aarch64-linux-android/release/bundle/apk/*.apk # 或者 .aab 文件路径，根据你的构建输出
+          # 如果你构建的是 AAB，路径可能是 src-tauri/target/aarch64-linux-android/release/bundle/release/*.aab
