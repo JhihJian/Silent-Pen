@@ -31,10 +31,11 @@ jobs:
       - name: Install Tauri CLI globally
         run: npm install -g @tauri-apps/cli@latest
 
-      - name: Install frontend dependencies
+      - name: Setup project
         run: |
           cd silent-pen
           npm install
+          npm install -D vite @vitejs/plugin-react
 
       # 设置 Android SDK 环境
       # 这是一个关键步骤，确保 Android 构建工具可用
