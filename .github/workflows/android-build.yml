@@ -33,6 +33,11 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Set up Android NDK
+        uses: android-actions/setup-ndk@v2
+        with:
+          ndk-version: '25.1.8937393'
+
       - name: Build Android APK (debug)
         run: |
           cd silent-pen
