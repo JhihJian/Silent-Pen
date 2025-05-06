@@ -38,7 +38,7 @@ jobs:
           npm install
           npm install -D @tauri-apps/cli
           # 确认 tauri CLI 已安装
-          echo "$(npm bin)/tauri --version"
+          npx tauri --version
           # 确保 node_modules/.bin 在 PATH 中
           echo "$(npm bin)" >> $GITHUB_PATH
 
@@ -62,8 +62,8 @@ jobs:
       - name: Initialize Android project structure
         run: |
           cd silent-pen
-          # 使用本地安装的 Tauri CLI
-          $(npm bin)/tauri android init
+          # 使用 npx 执行 tauri 命令
+          npx tauri android init
 
       - name: Setup Android Signing
         if: github.event_name == 'workflow_dispatch'
@@ -83,8 +83,8 @@ jobs:
       - name: Build Android APK (debug)
         run: |
           cd silent-pen
-          # 使用本地安装的 Tauri CLI
-          $(npm bin)/tauri android build --debug
+          # 使用 npx 执行 tauri 命令
+          npx tauri android build --debug
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
@@ -97,8 +97,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           cd silent-pen
-          # 使用本地安装的 Tauri CLI
-          $(npm bin)/tauri android build
+          # 使用 npx 执行 tauri 命令
+          npx tauri android build
           
       - name: Upload Release APK
         if: github.event_name == 'workflow_dispatch'
