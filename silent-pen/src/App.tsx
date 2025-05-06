@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainPage from "./pages/MainPage";
 import WritePage from "./pages/WritePage";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getPassword, setPassword } from "./utils/password";
 import "./App.css";
 

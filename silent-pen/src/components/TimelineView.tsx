@@ -1,13 +1,6 @@
 import React from "react";
 import type { DiaryMeta } from "../pages/MainPage";
 
-// 假数据：已写日记的日期和字数（精确到分钟）
-const diaryData: { date: string; words: number }[] = [
-  { date: "2024-06-01 09:15", words: 520 },
-  { date: "2024-06-03 21:30", words: 300 },
-  { date: "2024-06-05 14:08", words: 888 },
-];
-
 const LockIcon = () => (
   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={{ marginRight: 8 }}>
     <rect x="4" y="8" width="12" height="8" rx="3" fill="#b0b8c1" stroke="#1976d2" strokeWidth="1.5"/>

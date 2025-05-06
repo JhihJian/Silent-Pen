@@ -3,9 +3,9 @@ use tauri::command;
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::Write;
 use aes_gcm::{Aes256Gcm, Key, Nonce};
-use aes_gcm::aead::{Aead, NewAead};
-use rand::RngCore;
+use aes_gcm::aead::{Aead, KeyInit};
 use rand::rngs::OsRng;
+use rand_core::TryRngCore;
 use base64::{engine::general_purpose, Engine as _};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -21,11 +21,11 @@ fn save_diary(content: String, datetime: String, words: u32, password: String) -
     let mut key_bytes = [0u8; 32];
     let hash = blake3::hash(password.as_bytes());
     key_bytes.copy_from_slice(&hash.as_bytes()[..32]);
-    let key = Key::from_slice(&key_bytes);
+    let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
     // 生成随机 nonce
     let mut nonce_bytes = [0u8; 12];
-    OsRng.fill_bytes(&mut nonce_bytes);
+    OsRng.try_fill_bytes(&mut nonce_bytes).map_err(|e| e.to_string())?;
     let nonce = Nonce::from_slice(&nonce_bytes);
     // 明文格式：时间|字数|内容
     let plain = format!("{}|{}|{}", datetime, words, content);
@@ -51,7 +51,7 @@ fn load_diary(password: String) -> Result<Vec<(String, String, u32)>, String> {
     let mut key_bytes = [0u8; 32];
     let hash = blake3::hash(password.as_bytes());
     key_bytes.copy_from_slice(&hash.as_bytes()[..32]);
-    let key = Key::from_slice(&key_bytes);
+    let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
     let f = File::open(file).map_err(|_| "没有日记数据".to_string())?;
     let reader = BufReader::new(f);
@@ -63,7 +63,7 @@ fn load_diary(password: String) -> Result<Vec<(String, String, u32)>, String> {
         }
         let (nonce_bytes, ciphertext) = data.split_at(12);
         let nonce = Nonce::from_slice(nonce_bytes);
-        let plain = match cipher.decrypt(nonce, ciphertext) {
+        let plain: Vec<u8> = match cipher.decrypt(nonce, ciphertext) {
             Ok(p) => p,
             Err(_) => return Err("密码错误或数据损坏".to_string()),
         };
