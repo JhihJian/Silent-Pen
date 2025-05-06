@@ -32,19 +32,29 @@ jobs:
           workspaces: "./silent-pen/src-tauri -> target"
           key: android-build
 
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli
-
       - name: Install Tauri CLI globally
         run: npm install -g @tauri-apps/cli@latest
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./silent-pen
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install Android NDK
         run: |
-          sdkmanager "ndk;25.2.9519653"
+          echo "安装 Android NDK..."
+          yes | sdkmanager --licenses
+          yes | sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+
+      - name: Verify NDK installation
+        run: |
+          echo "NDK_HOME: $NDK_HOME"
+          echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+          ls -la $ANDROID_NDK_HOME || echo "NDK 目录不存在"
 
       - name: Build Android APK (debug)
         run: |
