@@ -1,4 +1,4 @@
-name: Build Android APK Daily
+name: Build Tauri Android
 
 on:
   schedule:
@@ -7,23 +7,24 @@ on:
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Android 构建通常在 Linux 环境下进行
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
           cache-dependency-path: './silent-pen/package-lock.json'
 
-      - name: Set up Rust
+      - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi
+          targets: aarch64-linux-android # 为 Android ARM 64 位目标安装 Rust 工具链
+          # 你可能还需要 x86_64-linux-android 如果需要模拟器支持
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -34,9 +35,8 @@ jobs:
       - name: Install Tauri CLI
         run: npm install -g @tauri-apps/cli
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./silent-pen
+      - name: Install Tauri CLI globally
+        run: npm install -g @tauri-apps/cli@latest
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -51,7 +51,7 @@ jobs:
           cd silent-pen
           tauri android build --debug
 
-      - name: Upload APK
+      - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-debug
