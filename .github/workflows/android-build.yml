@@ -32,12 +32,15 @@ jobs:
           workspaces: "./silent-pen/src-tauri -> target"
           key: android-build
 
-      - name: Install Tauri CLI globally
-        run: npm install -g @tauri-apps/cli@latest
-
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./silent-pen
+      - name: Install dependencies and Tauri CLI
+        run: |
+          cd silent-pen
+          npm install
+          npm install -D @tauri-apps/cli
+          # 确认 tauri CLI 已安装
+          echo "$(npm bin)/tauri --version"
+          # 确保 node_modules/.bin 在 PATH 中
+          echo "$(npm bin)" >> $GITHUB_PATH
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -59,8 +62,8 @@ jobs:
       - name: Initialize Android project structure
         run: |
           cd silent-pen
-          # 初始化 Tauri Android 项目结构但不构建
-          tauri android init
+          # 使用本地安装的 Tauri CLI
+          $(npm bin)/tauri android init
 
       - name: Setup Android Signing
         if: github.event_name == 'workflow_dispatch'
@@ -80,7 +83,8 @@ jobs:
       - name: Build Android APK (debug)
         run: |
           cd silent-pen
-          tauri android build --debug
+          # 使用本地安装的 Tauri CLI
+          $(npm bin)/tauri android build --debug
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
@@ -93,7 +97,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           cd silent-pen
-          tauri android build
+          # 使用本地安装的 Tauri CLI
+          $(npm bin)/tauri android build
           
       - name: Upload Release APK
         if: github.event_name == 'workflow_dispatch'
