@@ -56,6 +56,27 @@ jobs:
           echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
           ls -la $ANDROID_NDK_HOME || echo "NDK 目录不存在"
 
+      - name: Initialize Android project structure
+        run: |
+          cd silent-pen
+          # 初始化 Tauri Android 项目结构但不构建
+          tauri android init
+
+      - name: Setup Android Signing
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          cd silent-pen/src-tauri/gen/android
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
+          # 解码 base64 格式的 keystore 文件
+          echo "${{ secrets.ANDROID_KEY_BASE64 }}" | base64 -d > $RUNNER_TEMP/keystore.jks
+          # 确认文件已创建
+          echo "已创建 keystore.properties 文件"
+          ls -la
+          echo "已解码 keystore 文件到 $RUNNER_TEMP/keystore.jks"
+          ls -la $RUNNER_TEMP/keystore.jks || echo "Keystore 文件不存在"
+
       - name: Build Android APK (debug)
         run: |
           cd silent-pen
