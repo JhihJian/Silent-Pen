@@ -5,6 +5,15 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "/**" }]
+    },
+    "fs:allow-app-read-recursive",
+    "fs:allow-app-write-recursive",
+    "fs:allow-app-meta-recursive",
+    "fs:allow-exists",
+    "fs:allow-mkdir"
   ]
 }

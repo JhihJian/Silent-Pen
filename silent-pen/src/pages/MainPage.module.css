@@ -1,0 +1,207 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px 12px 24px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-right: 48px;
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: 4px;
+  font-weight: 600;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #64748b !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+  text-shadow: none !important;
+  line-height: 1.2;
+  padding: 8px 0;
+  overflow: visible;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.secondaryButton {
+  background: rgba(255, 255, 255, 0.8);
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  padding: 6px 12px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.secondaryButton:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #1976d2, #2196f3);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  padding: 10px 24px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(25, 118, 210, 0.25);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 70vh;
+  padding: 40px 0;
+}
+
+.calendarCard {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  padding: 32px;
+  min-width: 360px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.timelineContainer {
+  width: 420px;
+  margin-top: 32px;
+}
+
+.loading {
+  color: #64748b;
+  text-align: center;
+}
+
+.error {
+  color: #ef4444;
+  text-align: center;
+}
+
+.modalOverlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 36px;
+  min-width: 320px;
+  text-align: center;
+  color: #1a237e;
+  font-weight: 600;
+  font-size: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modalTitle {
+  margin-bottom: 16px;
+}
+
+.modalInput {
+  width: 80%;
+  font-size: 16px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.8);
+  margin-bottom: 16px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.modalInput:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.modalButtons {
+  margin-top: 8px;
+}
+
+.modalButton {
+  font-size: 16px;
+  padding: 8px 32px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modalButtonPrimary {
+  composes: modalButton;
+  background: linear-gradient(135deg, #1976d2, #2196f3);
+  color: #fff;
+  border: none;
+  margin-right: 12px;
+}
+
+.modalButtonPrimary:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+}
+
+.modalButtonSecondary {
+  composes: modalButton;
+  background: rgba(255, 255, 255, 0.8);
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+} 

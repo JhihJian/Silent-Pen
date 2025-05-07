@@ -27,4 +27,5 @@ rand_core = { version = "0.9.3", features = ["std", "os_rng"] }
 base64 = "0.22.1"
 blake3 = "1.8.2"
 rand = "0.9.1"
+tauri-plugin-fs = "2.2.1"
 

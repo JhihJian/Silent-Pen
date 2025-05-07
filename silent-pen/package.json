@@ -10,7 +10,8 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-dialog": "^2.2.1",
+    "@tauri-apps/plugin-fs": "^2.2.1",
     "@tauri-apps/plugin-opener": "^2",
     "date-fns": "^4.1.0",
     "react": "^18.3.1",
@@ -19,6 +20,7 @@
     "styled-components": "^6.1.17"
   },
   "devDependencies": {
+    "@tauri-apps/api": "^2.5.0",
     "@tauri-apps/cli": "^2",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
