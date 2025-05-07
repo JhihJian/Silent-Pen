@@ -59,12 +59,6 @@ jobs:
           echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
           ls -la $ANDROID_NDK_HOME || echo "NDK 目录不存在"
 
-      - name: Initialize Android project structure
-        run: |
-          cd silent-pen
-          # 使用 npx 执行 tauri 命令
-          npx tauri android init
-
       - name: Setup Android Signing
         if: github.event_name == 'workflow_dispatch'
         run: |
