@@ -10,6 +10,7 @@ use base64::{engine::general_purpose, Engine as _};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
+use uuid::Uuid;
 
 // 从密码生成密钥
 fn derive_key(password: &str) -> Key<Aes256Gcm> {
@@ -56,41 +57,29 @@ fn save_diary(
     words: u32, 
     password: String
 ) -> Result<(), String> {
-    // 获取应用数据目录
     let data_dir = get_app_data_dir(&app_handle)?;
-    
-    // 生成密钥
     let key = derive_key(&password);
     let cipher = Aes256Gcm::new(&key);
-    
-    // 生成随机 nonce
     let mut nonce_bytes = [0u8; 12];
     let mut rng = OsRng;
     rng.try_fill_bytes(&mut nonce_bytes).map_err(|e| format!("生成随机数失败: {}", e))?;
     let nonce = Nonce::from_slice(&nonce_bytes);
-    
-    // 明文格式：时间|字数|内容
-    let plain = format!("{}|{}|{}", datetime, words, content);
+    // 生成唯一id
+    let id = Uuid::new_v4().to_string();
+    // 明文格式：id|时间|字数|内容
+    let plain = format!("{}|{}|{}|{}", id, datetime, words, content);
     let ciphertext = cipher.encrypt(nonce, plain.as_bytes()).map_err(|e| e.to_string())?;
-    
-    // 拼接 nonce + 密文，base64 存储
     let mut out = Vec::new();
     out.extend_from_slice(&nonce_bytes);
     out.extend_from_slice(&ciphertext);
     let b64 = general_purpose::STANDARD.encode(&out);
-    
-    // 创建目录并写入文件
     create_dir_all(&data_dir).map_err(|e| e.to_string())?;
-    
     let file_path = data_dir.join("diary.enc");
-    println!("保存文件到路径: {:?}", file_path);
-    
     let mut f = OpenOptions::new()
         .create(true)
         .append(true)
         .open(&file_path)
         .map_err(|e| format!("打开文件失败: {:?} - {}", file_path, e))?;
-    
     writeln!(f, "{}", b64).map_err(|e| format!("写入文件失败: {}", e))?;
     Ok(())
 }
@@ -110,7 +99,10 @@ fn load_diary(
     let key = derive_key(&password);
     let cipher = Aes256Gcm::new(&key);
     
-    let f = File::open(&file_path).map_err(|e| format!("没有日记数据: {}", e))?;
+    let f = match File::open(&file_path) {
+        Ok(file) => file,
+        Err(_) => return Ok(res), // 没有日记数据文件时返回空vec
+    };
     let reader = BufReader::new(f);
     
     for line in reader.lines() {
@@ -126,8 +118,9 @@ fn load_diary(
             Err(_) => return Err("密码错误或数据损坏".to_string()),
         };
         let plain_str = String::from_utf8_lossy(&plain);
-        // 明文格式：时间|字数|内容
-        let mut parts = plain_str.splitn(3, '|');
+        // 明文格式：id|时间|字数|内容
+        let mut parts = plain_str.splitn(4, '|');
+        let _id = parts.next().unwrap_or("");
         let datetime = parts.next().unwrap_or("").to_string();
         let words = parts.next().unwrap_or("0").parse::<u32>().unwrap_or(0);
         // 内容不返回
@@ -144,17 +137,13 @@ fn export_diary(
     password: String,
     _export_pwd: String
 ) -> Result<String, String> {
-    // 获取应用数据目录
     let data_dir = get_app_data_dir(&app_handle)?;
     let file_path = data_dir.join("diary.enc");
-    
     let mut res = Vec::new();
     let key = derive_key(&password);
     let cipher = Aes256Gcm::new(&key);
-    
     let f = File::open(&file_path).map_err(|e| format!("没有日记数据: {}", e))?;
     let reader = BufReader::new(f);
-    
     for line in reader.lines() {
         let line = line.map_err(|_| "读取文件失败".to_string())?;
         let data = general_purpose::STANDARD.decode(line).map_err(|_| "base64解码失败".to_string())?;
@@ -168,12 +157,19 @@ fn export_diary(
             Err(_) => return Err("密码错误或数据损坏".to_string()),
         };
         let plain_str = String::from_utf8_lossy(&plain);
-        // 明文格式：时间|字数|内容
-        let mut parts = plain_str.splitn(3, '|');
-        let datetime = parts.next().unwrap_or("").to_string();
-        let words = parts.next().unwrap_or("0").to_string();
-        let content = parts.next().unwrap_or("").to_string();
-        res.push(format!("时间：{}\n字数：{}\n内容：\n{}\n\n", datetime, words, content));
+        // 明文格式：id|时间|字数|内容
+        let mut parts = plain_str.splitn(4, '|');
+        let id = parts.next().unwrap_or("");
+        let datetime = parts.next().unwrap_or("");
+        let words = parts.next().unwrap_or("");
+        let content = parts.next().unwrap_or("");
+        res.push(format!("ID：{}
+时间：{}
+字数：{}
+内容：
+{}
+
+", id, datetime, words, content));
     }
     Ok(res.join("---\n"))
 }
@@ -181,46 +177,69 @@ fn export_diary(
 #[command]
 fn import_diary(
     app_handle: AppHandle,
-    password: String,
+    _password: String,
     _import_pwd: String,
     content: String
 ) -> Result<(), String> {
-    // 获取应用数据目录
     let data_dir = get_app_data_dir(&app_handle)?;
-    
-    // 生成密钥
-    let key = derive_key(&password);
-    let cipher = Aes256Gcm::new(&key);
-    
-    // 生成随机 nonce
-    let mut nonce_bytes = [0u8; 12];
-    let mut rng = OsRng;
-    rng.try_fill_bytes(&mut nonce_bytes).map_err(|e| format!("生成随机数失败: {}", e))?;
-    let nonce = Nonce::from_slice(&nonce_bytes);
-    
-    // 明文格式：时间|字数|内容
-    let plain = format!("{}|{}|{}", "导入时间", "0", content);
-    let ciphertext = cipher.encrypt(nonce, plain.as_bytes()).map_err(|e| e.to_string())?;
-    
-    // 拼接 nonce + 密文，base64 存储
-    let mut out = Vec::new();
-    out.extend_from_slice(&nonce_bytes);
-    out.extend_from_slice(&ciphertext);
-    let b64 = general_purpose::STANDARD.encode(&out);
-    
-    // 创建目录并写入文件
-    create_dir_all(&data_dir).map_err(|e| e.to_string())?;
-    
+    // 读取已有id集合
     let file_path = data_dir.join("diary.enc");
-    println!("保存文件到路径: {:?}", file_path);
-    
-    let mut f = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&file_path)
-        .map_err(|e| format!("打开文件失败: {:?} - {}", file_path, e))?;
-    
-    writeln!(f, "{}", b64).map_err(|e| format!("写入文件失败: {}", e))?;
+    let mut existing_ids = std::collections::HashSet::new();
+    if let Ok(f) = File::open(&file_path) {
+        let reader = BufReader::new(f);
+        for line in reader.lines() {
+            if let Ok(line) = line {
+                if let Ok(data) = general_purpose::STANDARD.decode(&line) {
+                    if data.len() >= 12 {
+                        let (nonce_bytes, ciphertext) = data.split_at(12);
+                        let nonce = Nonce::from_slice(nonce_bytes);
+                        if let Ok(plain) = Aes256Gcm::new(&derive_key("dummy")).decrypt(nonce, ciphertext) {
+                            let plain_str = String::from_utf8_lossy(&plain);
+                            let mut parts = plain_str.splitn(4, '|');
+                            if let Some(id) = parts.next() {
+                                existing_ids.insert(id.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // 生成密钥（用导入时的密码加密）
+    let key = derive_key(&_import_pwd);
+    let cipher = Aes256Gcm::new(&key);
+    for entry in content.split("---\n") {
+        let mut lines = entry.lines();
+        let id_line = lines.next().unwrap_or("");
+        let datetime_line = lines.next().unwrap_or("");
+        let words_line = lines.next().unwrap_or("");
+        let content_line = lines.skip(1).collect::<Vec<_>>().join("\n");
+        let id = id_line.strip_prefix("ID：").unwrap_or("").trim();
+        if id.is_empty() || existing_ids.contains(id) {
+            continue;
+        }
+        let datetime = datetime_line.strip_prefix("时间：").unwrap_or("").trim();
+        let words = words_line.strip_prefix("字数：").unwrap_or("").trim();
+        // 明文格式：id|时间|字数|内容
+        let plain = format!("{}|{}|{}|{}", id, datetime, words, content_line);
+        let mut nonce_bytes = [0u8; 12];
+        let mut rng = OsRng;
+        rng.try_fill_bytes(&mut nonce_bytes).map_err(|e| format!("生成随机数失败: {}", e))?;
+        let nonce = Nonce::from_slice(&nonce_bytes);
+        let ciphertext = cipher.encrypt(nonce, plain.as_bytes()).map_err(|e| e.to_string())?;
+        let mut out = Vec::new();
+        out.extend_from_slice(&nonce_bytes);
+        out.extend_from_slice(&ciphertext);
+        let b64 = general_purpose::STANDARD.encode(&out);
+        create_dir_all(&data_dir).map_err(|e| e.to_string())?;
+        let mut f = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&file_path)
+            .map_err(|e| format!("打开文件失败: {:?} - {}", file_path, e))?;
+        writeln!(f, "{}", b64).map_err(|e| format!("写入文件失败: {}", e))?;
+        existing_ids.insert(id.to_string());
+    }
     Ok(())
 }
 
@@ -260,6 +279,7 @@ pub fn run() {
         .setup(|app| {
             // 这里可以按需注册更多插件
             app.handle().plugin(tauri_plugin_fs::init())?;
+            app.handle().plugin(tauri_plugin_dialog::init())?;
             // 例如：注册日志插件（可选）
             // if cfg!(debug_assertions) {
             //     app.handle().plugin(
