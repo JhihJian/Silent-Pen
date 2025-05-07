@@ -99,5 +99,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-release
-          path: silent-pen/src-tauri/gen/android/app/build/outputs/apk/release/*.apk
+          path: silent-pen/src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
           retention-days: 30 
